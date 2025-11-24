@@ -1,3 +1,4 @@
+using Prism.Commands;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,7 @@ namespace WPFUIUX.Core
     /// <typeparam name="T">要包裝的 Model 類型</typeparam>
     public class TrackingViewModel<T> : BindableBase where T : class
     {
-        private readonly T _model;
+        
         private Dictionary<string, object?>? _originalValues;
         private Dictionary<string, object?> _currentValues;
 
@@ -25,7 +26,7 @@ namespace WPFUIUX.Core
             get { return _isDirty; }
             private set { SetProperty(ref _isDirty, value); }
         }
-
+        private readonly T _model;
         /// <summary>
         /// 取得底層的 Model
         /// </summary>
@@ -43,16 +44,28 @@ namespace WPFUIUX.Core
 
         public TrackingViewModel(T model)
         {
-            _model = model ?? throw new ArgumentNullException(nameof(model));
+            if(model == null) throw new ArgumentNullException(nameof(model));
+            _model = model;
             _currentValues = new Dictionary<string, object?>();
 
             // 初始化：從 Model 讀取所有屬性值
-            InitializeFromModel();
+            InitializeFromModel(model);
         }
 
         /// <summary>
         /// 從 Model 初始化所有屬性值
         /// </summary>
+        private void InitializeFromModel(T model)
+        {
+            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => p.CanRead && p.CanWrite);
+
+            foreach (var prop in properties)
+            {
+                var value = prop.GetValue(model);
+                _currentValues[prop.Name] = value;
+            }
+        }
         private void InitializeFromModel()
         {
             var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -64,7 +77,6 @@ namespace WPFUIUX.Core
                 _currentValues[prop.Name] = value;
             }
         }
-
         /// <summary>
         /// 取得屬性值（供索引器使用）
         /// </summary>
@@ -105,53 +117,8 @@ namespace WPFUIUX.Core
             UpdateDirtyState(propertyName, oldValue, value);
 
             // 通知屬性變更
-            RaisePropertyChanged($"Item[{propertyName}]");
+            RaisePropertyChanged($"Item[]");
         }
-
-        /// <summary>
-        /// 取得屬性值（從內部字典）
-        /// </summary>
-        protected TValue? GetValue<TValue>([CallerMemberName] string? propertyName = null)
-        {
-            if (string.IsNullOrEmpty(propertyName))
-                return default(TValue);
-
-            if (_currentValues.TryGetValue(propertyName, out var value))
-            {
-                return value == null ? default(TValue) : (TValue)value;
-            }
-
-            return default(TValue);
-        }
-
-        /// <summary>
-        /// 設定屬性值並追蹤變更
-        /// </summary>
-        protected bool SetValue<TValue>(TValue value, [CallerMemberName] string? propertyName = null)
-        {
-            if (string.IsNullOrEmpty(propertyName))
-                return false;
-
-            // 取得舊值
-            var oldValue = _currentValues.TryGetValue(propertyName, out var existing)
-                ? existing
-                : default(TValue);
-
-            // 檢查是否真的有變更
-            if (EqualityComparer<TValue>.Default.Equals((TValue?)oldValue, value))
-                return false;
-
-            // 更新當前值
-            _currentValues[propertyName] = value;
-
-            // 追蹤變更
-            UpdateDirtyState(propertyName, oldValue, value);
-
-            // 通知屬性變更
-            RaisePropertyChanged(propertyName);
-            return true;
-        }
-
         private void UpdateDirtyState(string propertyName, object? oldValue, object? newValue)
         {
             // Skip tracking for IsDirty itself to avoid infinite recursion
@@ -187,12 +154,12 @@ namespace WPFUIUX.Core
             }
 
             // 更新 IsDirty 狀態
-            if (_isDirty != currentDirtyState)
-            {
-                _isDirty = currentDirtyState;
-                RaisePropertyChanged(nameof(IsDirty));
-            }
+            IsDirty = currentDirtyState;
         }
+
+        private DelegateCommand _markAsCleanCommand;
+        public DelegateCommand MarkAsCleanCommand =>
+            _markAsCleanCommand ?? (_markAsCleanCommand = new DelegateCommand(MarkAsClean));
 
         /// <summary>
         /// 標記為乾淨狀態
@@ -206,31 +173,43 @@ namespace WPFUIUX.Core
         /// <summary>
         /// 將當前的 ViewModel 值同步回 Model
         /// </summary>
-        public void SyncToModel()
-        {
-            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => p.CanRead && p.CanWrite);
+        //public void SyncToModel()
+        //{
+        //    var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        //        .Where(p => p.CanRead && p.CanWrite);
 
-            foreach (var prop in properties)
-            {
-                if (_currentValues.TryGetValue(prop.Name, out var value))
-                {
-                    prop.SetValue(_model, value);
-                }
-            }
-        }
+        //    foreach (var prop in properties)
+        //    {
+        //        if (_currentValues.TryGetValue(prop.Name, out var value))
+        //        {
+        //            prop.SetValue(_model, value);
+        //        }
+        //    }
+        //}
 
+        private DelegateCommand _reloadFromModelCommand ;
+        public DelegateCommand ReloadFromModelCommand =>
+            _reloadFromModelCommand  ?? (_reloadFromModelCommand  = new DelegateCommand(ReloadFromModel));
         /// <summary>
         /// 從 Model 重新載入值（放棄所有變更）
         /// </summary>
         public void ReloadFromModel()
         {
-            _currentValues.Clear();
-            InitializeFromModel();
+            if (_originalValues == null) return;
+
+            foreach (var key in _originalValues.Keys)
+            {
+                _currentValues[key] = _originalValues[key];
+            }
+
+
+            //_currentValues.Clear();
+            //InitializeFromModel();
             MarkAsClean();
 
             // 通知所有屬性變更
             RaisePropertyChanged(string.Empty);
+            //RaisePropertyChanged("Item[]");
         }
     }
 }

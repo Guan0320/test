@@ -16,6 +16,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- 標題 -->
@@ -47,6 +48,7 @@
                   CanUserAddRows="False"
                   CanUserDeleteRows="False"
                   SelectionMode="Single"
+                  SelectedItem="{Binding SelectedCustomer}"
                   GridLinesVisibility="Horizontal"
                   HeadersVisibility="Column"
                   AlternatingRowBackground="#F5F5F5"
@@ -65,6 +67,27 @@
             </DataGrid.RowStyle>
 
             <DataGrid.Columns>
+                <DataGridTemplateColumn Header="MarkAsClean">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding MarkAsCleanCommand}"></Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="ReloadFromModel">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding ReloadFromModelCommand}"></Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Test">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding TestCommand}"></Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <!-- 使用索引器語法綁定，會呼叫 TrackingViewModel 的 this[propertyName] -->
                 <DataGridTextColumn Header="姓名" 
                                     Binding="{Binding [Name], UpdateSourceTrigger=PropertyChanged}" 
@@ -89,8 +112,47 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- 說明文字 -->
+        <!-- SelectedItem 詳細區 -->
         <Border Grid.Row="3" 
+            
+            Background="#FFFDE7" 
+            Padding="10" 
+            Margin="0,10,0,0"
+            BorderBrush="#FFC107"
+            BorderThickness="1"
+            CornerRadius="4">
+            <StackPanel>
+                <TextBlock FontWeight="Bold" Text="選取的客戶資訊：" Margin="0,0,0,5"/>
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                    <TextBlock Text="姓名：" Width="60"/>
+                    <TextBlock Text="{Binding SelectedCustomer[Name],UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                    <TextBlock Text="年齡：" Width="60"/>
+                    <TextBlock Text="{Binding SelectedCustomer[Age]}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                    <TextBlock Text="Email：" Width="60"/>
+                    <TextBlock Text="{Binding SelectedCustomer[Email]}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                    <TextBlock Text="地址：" Width="60"/>
+                    <TextBlock Text="{Binding SelectedCustomer[Address]}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                    <TextBlock Text="城市：" Width="60"/>
+                    <TextBlock Text="{Binding SelectedCustomer[City]}" />
+                </StackPanel>
+                <!--<StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                    <CheckBox IsChecked="{Binding SelectedCustomer.IsDirty}" IsEnabled="False"/>
+                    <TextBlock Text="已修改?" Margin="5,0,0,0"/>
+                </StackPanel>-->
+            </StackPanel>
+        </Border>
+
+
+        <!-- 說明文字 -->
+        <Border Grid.Row="4" 
                 Background="#E3F2FD" 
                 Padding="15" 
                 Margin="0,15,0,0"
