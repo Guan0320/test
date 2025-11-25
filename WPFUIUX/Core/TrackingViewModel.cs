@@ -211,50 +211,5 @@ namespace WPFUIUX.Core
             RaisePropertyChanged(string.Empty);
             //RaisePropertyChanged("Item[]");
         }
-
-        /// <summary>
-        /// 取得屬性值（從內部字典）
-        /// </summary>
-        protected TValue? GetValue<TValue>([CallerMemberName] string? propertyName = null)
-        {
-            if (string.IsNullOrEmpty(propertyName))
-                return default(TValue);
-
-            if (_currentValues.TryGetValue(propertyName, out var value))
-            {
-                return value == null ? default(TValue) : (TValue)value;
-            }
-
-            return default(TValue);
-        }
-
-        /// <summary>
-        /// 設定屬性值並追蹤變更
-        /// </summary>
-        protected bool SetValue<TValue>(TValue value, [CallerMemberName] string? propertyName = null)
-        {
-            if (string.IsNullOrEmpty(propertyName))
-                return false;
-
-            // 取得舊值
-            var oldValue = _currentValues.TryGetValue(propertyName, out var existing)
-                ? existing
-                : default(TValue);
-
-            // 檢查是否真的有變更
-            if (EqualityComparer<TValue>.Default.Equals((TValue?)oldValue, value))
-                return false;
-
-            // 更新當前值
-            _currentValues[propertyName] = value;
-
-            // 追蹤變更
-            UpdateDirtyState(propertyName, oldValue, value);
-
-            // 通知屬性變更
-            RaisePropertyChanged(propertyName);
-            return true;
-        }
-
     }
 }

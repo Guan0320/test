@@ -57,36 +57,5 @@ namespace BlankApp1.ViewModels
 
             Customers.Add(newCustomer);
         }
-
-        //private void SaveChanges()
-        //{
-        //    // 找出所有被修改的項目
-        //    var modifiedItems = Customers.Where(c => c.IsDirty).ToList();
-
-        //    if (modifiedItems.Count == 0)
-        //    {
-        //        MessageBox.Show("沒有資料需要儲存。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
-        //        return;
-        //    }
-
-        //    // 這裡可以呼叫 API 或資料庫儲存
-        //    // 透過 Model 屬性存取底層資料
-        //    string message = $"找到 {modifiedItems.Count} 筆修改的資料：\n\n";
-        //    foreach (var item in modifiedItems.Take(5))
-        //    {
-        //        var customer = item.Model;
-        //        message += $"- {customer.Name} (Age: {customer.Age})\n";
-        //    }
-        //    if (modifiedItems.Count > 5)
-        //        message += "...";
-
-        //    MessageBox.Show(message, "儲存變更", MessageBoxButton.OK, MessageBoxImage.Information);
-
-        //    // 儲存成功後，標記為乾淨狀態
-        //    foreach (var item in modifiedItems)
-        //    {
-        //        item.MarkAsClean();
-        //    }
-        //}
     }
 }
